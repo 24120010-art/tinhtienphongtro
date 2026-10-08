@@ -1,27 +1,27 @@
 import streamlit as st
 from datetime import datetime
-st.image("thiet-ke-phong-tro-15m2-co-gac-lung-5-1024x1024.webp")
-# =========================
+
+# ==============================
 # CẤU HÌNH TRANG
-# =========================
+# ==============================
 st.set_page_config(
-    page_title="Tính hóa đơn phòng trọ",
+    page_title="Hóa đơn phòng trọ",
     page_icon="🏠",
     layout="centered"
 )
 
-# =========================
+# ==============================
 # TIÊU ĐỀ
-# =========================
+# ==============================
 st.title("🏠 ỨNG DỤNG TÍNH HÓA ĐƠN PHÒNG TRỌ")
-st.write("Tính tiền phòng, tiền điện, tiền nước và tiền WiFi")
+st.caption("Tiền phòng + Tiền điện + Tiền nước + Tiền WiFi")
 
 st.divider()
 
-# =========================
-# NHẬP THÔNG TIN
-# =========================
-st.subheader("📋 Thông tin hóa đơn")
+# ==============================
+# THÔNG TIN PHÒNG
+# ==============================
+st.subheader("📋 Thông tin phòng")
 
 so_phong = st.text_input(
     "🏠 Số phòng",
@@ -36,14 +36,28 @@ tien_phong = st.number_input(
     format="%d"
 )
 
-st.markdown("### ⚡ Tiền điện")
+# ==============================
+# TIỀN ĐIỆN
+# ==============================
+st.subheader("⚡ Tiền điện")
 
-so_dien = st.number_input(
-    "Số điện sử dụng (kWh)",
-    min_value=0.0,
-    value=0.0,
-    step=1.0
-)
+col1, col2 = st.columns(2)
+
+with col1:
+    dien_cu = st.number_input(
+        "Chỉ số điện cũ (kWh)",
+        min_value=0.0,
+        value=0.0,
+        step=1.0
+    )
+
+with col2:
+    dien_moi = st.number_input(
+        "Chỉ số điện mới (kWh)",
+        min_value=0.0,
+        value=0.0,
+        step=1.0
+    )
 
 don_gia_dien = st.number_input(
     "Đơn giá điện (VNĐ/kWh)",
@@ -53,14 +67,43 @@ don_gia_dien = st.number_input(
     format="%d"
 )
 
-st.markdown("### 💧 Tiền nước")
+# Tính số điện sử dụng
+so_kwh = dien_moi - dien_cu
 
-so_nuoc = st.number_input(
-    "Số nước sử dụng (m³)",
-    min_value=0.0,
-    value=0.0,
-    step=1.0
+# Kiểm tra chỉ số
+if dien_moi < dien_cu:
+    st.error("⚠️ Chỉ số điện mới không được nhỏ hơn chỉ số điện cũ!")
+    so_kwh = 0
+
+tien_dien = so_kwh * don_gia_dien
+
+st.info(
+    f"⚡ Điện sử dụng: **{so_kwh:,.0f} kWh**  \n"
+    f"💰 Tiền điện: **{tien_dien:,.0f} VNĐ**"
 )
+
+# ==============================
+# TIỀN NƯỚC
+# ==============================
+st.subheader("💧 Tiền nước")
+
+col3, col4 = st.columns(2)
+
+with col3:
+    nuoc_cu = st.number_input(
+        "Chỉ số nước cũ (m³)",
+        min_value=0.0,
+        value=0.0,
+        step=1.0
+    )
+
+with col4:
+    nuoc_moi = st.number_input(
+        "Chỉ số nước mới (m³)",
+        min_value=0.0,
+        value=0.0,
+        step=1.0
+    )
 
 don_gia_nuoc = st.number_input(
     "Đơn giá nước (VNĐ/m³)",
@@ -70,7 +113,25 @@ don_gia_nuoc = st.number_input(
     format="%d"
 )
 
-st.markdown("### 📶 Tiền WiFi")
+# Tính số nước sử dụng
+so_m3 = nuoc_moi - nuoc_cu
+
+# Kiểm tra chỉ số
+if nuoc_moi < nuoc_cu:
+    st.error("⚠️ Chỉ số nước mới không được nhỏ hơn chỉ số nước cũ!")
+    so_m3 = 0
+
+tien_nuoc = so_m3 * don_gia_nuoc
+
+st.info(
+    f"💧 Nước sử dụng: **{so_m3:,.0f} m³**  \n"
+    f"💰 Tiền nước: **{tien_nuoc:,.0f} VNĐ**"
+)
+
+# ==============================
+# TIỀN WIFI
+# ==============================
+st.subheader("📶 Tiền WiFi")
 
 tien_wifi = st.number_input(
     "Tiền WiFi (VNĐ)",
@@ -80,19 +141,26 @@ tien_wifi = st.number_input(
     format="%d"
 )
 
-# =========================
+# ==============================
 # NÚT TÍNH HÓA ĐƠN
-# =========================
-if st.button("🧮 TÍNH HÓA ĐƠN", use_container_width=True):
+# ==============================
+st.divider()
+
+if st.button(
+    "🧮 TÍNH HÓA ĐƠN",
+    use_container_width=True
+):
 
     if not so_phong.strip():
         st.warning("⚠️ Vui lòng nhập số phòng!")
-    else:
-        # Tính tiền điện
-        tien_dien = so_dien * don_gia_dien
 
-        # Tính tiền nước
-        tien_nuoc = so_nuoc * don_gia_nuoc
+    elif dien_moi < dien_cu:
+        st.warning("⚠️ Vui lòng kiểm tra lại chỉ số điện!")
+
+    elif nuoc_moi < nuoc_cu:
+        st.warning("⚠️ Vui lòng kiểm tra lại chỉ số nước!")
+
+    else:
 
         # Tổng tiền
         tong_tien = (
@@ -102,109 +170,149 @@ if st.button("🧮 TÍNH HÓA ĐƠN", use_container_width=True):
             + tien_wifi
         )
 
-        # Lưu thông tin vào session
+        # Lưu dữ liệu
         st.session_state["da_tinh"] = True
         st.session_state["so_phong"] = so_phong
         st.session_state["tien_phong"] = tien_phong
-        st.session_state["so_dien"] = so_dien
+
+        st.session_state["dien_cu"] = dien_cu
+        st.session_state["dien_moi"] = dien_moi
+        st.session_state["so_kwh"] = so_kwh
         st.session_state["don_gia_dien"] = don_gia_dien
         st.session_state["tien_dien"] = tien_dien
-        st.session_state["so_nuoc"] = so_nuoc
+
+        st.session_state["nuoc_cu"] = nuoc_cu
+        st.session_state["nuoc_moi"] = nuoc_moi
+        st.session_state["so_m3"] = so_m3
         st.session_state["don_gia_nuoc"] = don_gia_nuoc
         st.session_state["tien_nuoc"] = tien_nuoc
+
         st.session_state["tien_wifi"] = tien_wifi
         st.session_state["tong_tien"] = tong_tien
 
-# =========================
-# HIỂN THỊ KẾT QUẢ
-# =========================
+
+# ==============================
+# HIỂN THỊ HÓA ĐƠN
+# ==============================
 if st.session_state.get("da_tinh", False):
 
     st.divider()
 
-    st.subheader("🧾 CHI TIẾT HÓA ĐƠN")
+    st.subheader("🧾 HÓA ĐƠN TIỀN PHÒNG")
 
-    st.info(
-        f"🏠 **Số phòng:** {st.session_state['so_phong']}"
+    st.markdown(
+        f"### 🏠 Phòng: `{st.session_state['so_phong']}`"
     )
 
-    # Bảng hóa đơn
-    du_lieu = {
-        "Khoản thu": [
-            "Tiền phòng",
-            "Tiền điện",
-            "Tiền nước",
-            "Tiền WiFi"
-        ],
-        "Chi tiết": [
-            "Theo tháng",
-            f"{st.session_state['so_dien']:.0f} kWh × "
-            f"{st.session_state['don_gia_dien']:,.0f} VNĐ",
-            f"{st.session_state['so_nuoc']:.0f} m³ × "
-            f"{st.session_state['don_gia_nuoc']:,.0f} VNĐ",
-            "Theo tháng"
-        ],
-        "Thành tiền": [
-            f"{st.session_state['tien_phong']:,.0f} VNĐ",
-            f"{st.session_state['tien_dien']:,.0f} VNĐ",
-            f"{st.session_state['tien_nuoc']:,.0f} VNĐ",
-            f"{st.session_state['tien_wifi']:,.0f} VNĐ"
-        ]
-    }
+    # --------------------------
+    # TIỀN PHÒNG
+    # --------------------------
+    st.write("🏠 **Tiền phòng**")
+    st.write(
+        f"Thành tiền: **{st.session_state['tien_phong']:,.0f} VNĐ**"
+    )
 
-    st.table(du_lieu)
+    # --------------------------
+    # TIỀN ĐIỆN
+    # --------------------------
+    st.write("⚡ **Tiền điện**")
 
-    # Tổng tiền
+    st.write(
+        f"""
+- Chỉ số cũ: **{st.session_state['dien_cu']:,.0f} kWh**
+- Chỉ số mới: **{st.session_state['dien_moi']:,.0f} kWh**
+- Số điện sử dụng: **{st.session_state['so_kwh']:,.0f} kWh**
+- Đơn giá: **{st.session_state['don_gia_dien']:,.0f} VNĐ/kWh**
+- Tiền điện: **{st.session_state['tien_dien']:,.0f} VNĐ**
+"""
+    )
+
+    # --------------------------
+    # TIỀN NƯỚC
+    # --------------------------
+    st.write("💧 **Tiền nước**")
+
+    st.write(
+        f"""
+- Chỉ số cũ: **{st.session_state['nuoc_cu']:,.0f} m³**
+- Chỉ số mới: **{st.session_state['nuoc_moi']:,.0f} m³**
+- Số nước sử dụng: **{st.session_state['so_m3']:,.0f} m³**
+- Đơn giá: **{st.session_state['don_gia_nuoc']:,.0f} VNĐ/m³**
+- Tiền nước: **{st.session_state['tien_nuoc']:,.0f} VNĐ**
+"""
+    )
+
+    # --------------------------
+    # WIFI
+    # --------------------------
+    st.write("📶 **Tiền WiFi**")
+    st.write(
+        f"Thành tiền: **{st.session_state['tien_wifi']:,.0f} VNĐ**"
+    )
+
+    st.divider()
+
+    # ==========================
+    # TỔNG TIỀN
+    # ==========================
     st.success(
         f"💵 TỔNG TIỀN CẦN THANH TOÁN: "
         f"{st.session_state['tong_tien']:,.0f} VNĐ"
     )
 
-    st.divider()
-
-    # =========================
+    # ==========================
     # THANH TOÁN
-    # =========================
+    # ==========================
     if st.button(
         "💳 THANH TOÁN & XUẤT HÓA ĐƠN",
         use_container_width=True
     ):
 
-        thoi_gian = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        thoi_gian = datetime.now().strftime(
+            "%d/%m/%Y %H:%M:%S"
+        )
 
-        # Nội dung hóa đơn
+        # Nội dung file hóa đơn
         hoa_don = f"""
 ========================================
           HÓA ĐƠN TIỀN PHÒNG TRỌ
 ========================================
 
 Số phòng: {st.session_state['so_phong']}
-Thời gian: {thoi_gian}
+Ngày thanh toán: {thoi_gian}
 
 ----------------------------------------
-CHI TIẾT THANH TOÁN
+TIỀN PHÒNG
 ----------------------------------------
-
-Tiền phòng:
 {st.session_state['tien_phong']:,.0f} VNĐ
 
-Tiền điện:
-{st.session_state['so_dien']:.0f} kWh
+----------------------------------------
+TIỀN ĐIỆN
+----------------------------------------
+Chỉ số cũ: {st.session_state['dien_cu']:,.0f} kWh
+Chỉ số mới: {st.session_state['dien_moi']:,.0f} kWh
+Số điện sử dụng: {st.session_state['so_kwh']:,.0f} kWh
 Đơn giá: {st.session_state['don_gia_dien']:,.0f} VNĐ/kWh
-Thành tiền: {st.session_state['tien_dien']:,.0f} VNĐ
+Tiền điện: {st.session_state['tien_dien']:,.0f} VNĐ
 
-Tiền nước:
-{st.session_state['so_nuoc']:.0f} m³
+----------------------------------------
+TIỀN NƯỚC
+----------------------------------------
+Chỉ số cũ: {st.session_state['nuoc_cu']:,.0f} m³
+Chỉ số mới: {st.session_state['nuoc_moi']:,.0f} m³
+Số nước sử dụng: {st.session_state['so_m3']:,.0f} m³
 Đơn giá: {st.session_state['don_gia_nuoc']:,.0f} VNĐ/m³
-Thành tiền: {st.session_state['tien_nuoc']:,.0f} VNĐ
+Tiền nước: {st.session_state['tien_nuoc']:,.0f} VNĐ
 
-Tiền WiFi:
+----------------------------------------
+TIỀN WIFI
+----------------------------------------
 {st.session_state['tien_wifi']:,.0f} VNĐ
 
-----------------------------------------
+========================================
 TỔNG CỘNG:
 {st.session_state['tong_tien']:,.0f} VNĐ
-----------------------------------------
+========================================
 
 TRẠNG THÁI: ĐÃ THANH TOÁN
 
@@ -212,18 +320,22 @@ Cảm ơn quý khách!
 ========================================
 """
 
-        st.success("✅ Thanh toán thành công!")
+        st.success("✅ THANH TOÁN THÀNH CÔNG!")
 
         st.write(
-            f"**Phòng {st.session_state['so_phong']} "
-            f"đã thanh toán {st.session_state['tong_tien']:,.0f} VNĐ.**"
+            f"Phòng **{st.session_state['so_phong']}** "
+            f"đã thanh toán "
+            f"**{st.session_state['tong_tien']:,.0f} VNĐ**."
         )
 
-        # Cho phép tải hóa đơn
+        # Nút tải hóa đơn
         st.download_button(
             label="📥 TẢI HÓA ĐƠN",
             data=hoa_don,
-            file_name=f"hoa_don_phong_{st.session_state['so_phong']}.txt",
+            file_name=(
+                f"hoa_don_phong_"
+                f"{st.session_state['so_phong']}.txt"
+            ),
             mime="text/plain",
             use_container_width=True
         )
